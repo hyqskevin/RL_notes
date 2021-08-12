@@ -86,6 +86,7 @@ def train():
             state = next_state
 
             if done:
+                policy.rewards.append(-5.0)
                 break
 
         # update policy: \alpha * policy_loss

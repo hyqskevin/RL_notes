@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2021/8/2 9:04 AM
+# @Time    : 2021/8/4 5:04 PM
 # @Author  : kevin_w
 # @Site    : 
 # @File    : AC_layer.py
 # @Comment :
 
 import torch.nn as nn
-import torch.nn.functional as func
 
 
 def param_size(size, kernel_size=5, stride=2):
@@ -14,9 +13,9 @@ def param_size(size, kernel_size=5, stride=2):
 
 
 # define REINFORCE nn
-class REINFORCE(nn.Module):
+class ActorCritic(nn.Module):
     def __init__(self, height, width, output_size):
-        super(REINFORCE, self).__init__()
+        super(ActorCritic, self).__init__()
 
         self.conv = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=5, stride=2),
@@ -30,16 +29,23 @@ class REINFORCE(nn.Module):
         conv_h = param_size(param_size(height))
         conv_w = param_size(param_size(width))
         input_size = conv_h * conv_w * 32
-        self.linear = nn.Linear(input_size, output_size)
-        self.output = nn.Softmax(dim=1)
+        self.linear_1 = nn.Linear(input_size, 256)
+        self.linear_2 = nn.Linear(256, output_size)
+        self.action_output = nn.Softmax(dim=-1)
+        self.state_value_output = nn.Linear(256, 1)
 
         self.rewards = []
-        self.probs_log = []
+        self.actions = []
 
     def forward(self, x):
         x = self.conv(x)
         x = x.view(x.size(0), -1)  # flat to 1D
-        x = self.linear(x)
-        x = self.output(x)
-        return x
+        x = self.linear_1(x)
+
+        # get one state value
+        state_value= self.state_value_output(x)
+        # get softmax action output
+        action_fc = self.linear_2(x)
+        action = self.action_output(action_fc)
+        return action, state_value
 
