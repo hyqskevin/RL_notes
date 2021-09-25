@@ -93,7 +93,8 @@ def train():
 
         # plot last time when training
         live_time.append(t)
-        plot_training(live_time)
+        if episode % 100 == 0:
+            plot_training(live_time)
 
         # if episode % 200 == 0:
         #     modelPath = 'Times.pkl'
